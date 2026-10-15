@@ -33,7 +33,10 @@
 
 ## Resources
 ### Notions
--
+- [Introduction to RAG](https://blog.stephane-robert.info/docs/developper/programmation/python/rag-introduction/)
+
+#### Dependencies
+- [Python Fire](https://github.com/google/python-fire)
 
 ### GitHub
 -
