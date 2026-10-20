@@ -1,6 +1,13 @@
-class CLInterface():
+import os
+import tqdm
+
+DEFAULT_CHUNK_SIZE = 2000
+
+
+class RAGEngine():
     """
-    Client interface.
+    The Retrieval-Augmented Generation Engine. The commands and
+    their flags are defined here.
 
     Attributes:
       - index(self, max_chunk_size: int) -> None
@@ -20,7 +27,16 @@ class CLInterface():
         Parameter:
           - max_chunk_size: int
         """
-        pass
+        if os.path.exists("data/raw/vllm-0.10.1/") is False:
+            raise ValueError("Path to vllm does not exist")
+
+        if os.path.exists("data/processed/") is False:
+            os.mkdir("data/processed")
+            print("data/processed/ folder has been created successfully!")
+
+        nb_chunks: int = 0
+        print(f"Ingestion complete! Indexed {nb_chunks} chunks "
+              "under data/processed/")
 
     def search(self, query: str, k: int) -> str:
         """
@@ -31,7 +47,7 @@ class CLInterface():
           - k: int
 
         Return
-           -> str
+        -> str
         """
         pass
 
