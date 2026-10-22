@@ -1,7 +1,7 @@
 import os
 import tqdm
 
-DEFAULT_CHUNK_SIZE = 2000
+MAX_CONTEXT_LENGTH = 2000
 
 
 class RAGEngine():

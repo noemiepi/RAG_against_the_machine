@@ -38,5 +38,9 @@
 #### Dependencies
 - [Python Fire](https://github.com/google/python-fire)
 
+- [LangChain](https://www.ibm.com/fr-fr/think/topics/langchain)
+
+- [LangChain Text Splitter](https://docs.langchain.com/oss/python/integrations/splitters)
+
 ### GitHub
--
+- [Overtekk](https://github.com/Overtekk/RAG-against-the-machine)
