@@ -106,7 +106,9 @@ class Chunker():
     def _file_split(self, splitter: RecursiveCharacterTextSplitter,
                     file_path: str, content: str) -> MinimalSource:
         """
-        Splits the source file in the correct format.
+        Splits the source file in the correct format and make it
+        respect MinimalSource class format (file path, first and
+        last character index).
 
         Parameters:
           - splitter: RecursiveCharacterTextSplitter
@@ -116,4 +118,28 @@ class Chunker():
         Return
         -> MinimalSource
         """
-        pass
+        chunk_list: list[str] = []
+        i: int = 0
+
+        # Goes through every chunk of the splitter
+        for chunk in splitter.split_text(content):
+            first_i: int = content.find(chunk, i)
+
+            # Search from the beginning if there was an error previously
+            if first_i == -1:
+                first_i = content.find(chunk)
+            # It returned an error
+            if first_i == -1:
+                continue
+
+            # Get the last character's index
+            last_i: int = first_i + len(chunk)
+
+            # Update the index
+            first_i = last_i + 1
+
+            chunk_list.append(MinimalSource(file_path=file_path,
+                                            first_character_index=first_i,
+                                            last_character_index=last_i))
+
+        return chunk_list

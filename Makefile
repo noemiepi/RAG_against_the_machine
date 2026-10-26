@@ -51,7 +51,7 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 	find . -name "*.pyc" -delete
-	rm -rf data/output
+	rm -rf data/processed
 	@echo "\n$(GREEN)Folder cleaned!$(END)"
 
 
