@@ -14,8 +14,8 @@ def main() -> int:
         fire.Fire(RAGEngine)
         return 0
 
-    except Exception as e:
-        print(f"{r}[ERROR]{end}: An unexpected error occured:\n-> {e}")
+    except ValueError as e:
+        print(f"{r}[ERROR]{end}: {e}")
         return 1
 
 
@@ -26,5 +26,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{g}[INFO]{end}: Quitting RAG!")
 
-    except Exception as e:
-        print(f"{r}[ERROR]{end}: An unexpected error occured:\n-> {e}")
+    # except Exception as e:
+    #     print(f"{r}[ERROR]{end}: An unexpected error occured:\n-> {e}")

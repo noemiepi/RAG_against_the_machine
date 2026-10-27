@@ -17,7 +17,7 @@ MYPY_FLAGS=--warn-return-any --warn-unused-ignores --ignore-missing-imports \
 #       Rules       #
 # ----------------- #
 
-.PHONY: all install run debug clean lint lint-strict lint-format
+.PHONY: all install run debug clean lint lint-strict lint-format index
 
 
 all: install run
@@ -69,6 +69,16 @@ lint-strict:
 	$(FLAKE8) src/ || status=$$?; \
 	$(MYPY) src/ $(MYPY_FLAGS) --strict || status=$$?; \
 	exit $$status
+
+# ----------------- #
+#       Rules       #
+# ----------------- #
+
+index:
+	@clear
+	@echo "$(BLUE)Indexing the files...$(END)"
+	$(PYTHON) -m src index --max_chunk_size 2000
+
 
 # ----------------- #
 #       Colors      #

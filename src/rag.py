@@ -1,8 +1,6 @@
 import os
-import tqdm
 
-from src.indexer.chunker import Chunker
-from src.utils.file_utils import load_files
+from src.indexer.index import indexing
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -31,26 +29,28 @@ class RAGEngine():
         Parameter:
           - max_chunk_size: int
         """
+        # Check the max_chunk_size
+        if max_chunk_size <= 0:
+            raise ValueError("The context length should not be "
+                             "below 0 character.")
+        if max_chunk_size > 2000:
+            raise ValueError("The context length should not be "
+                             "above 2000 characters.")
+
+        # Check if the required folder is present
         vLLM_path: str = "data/raw/vllm-0.10.1/"
         if os.path.exists(vLLM_path) is False:
             raise ValueError("Path to vllm does not exist")
-
-        # Load the files
-        file_dict: dict[str, str] = load_files(vLLM_path)
-
-        # Initialize the Chunker
-        chunking = Chunker(max_chunk_size)
-
-        for file, content in file_dict.items():
-            nb_chunks += len(chunking.create_chunks(file, content))
 
         # If the folder doesn't exist, it is created
         if os.path.exists("data/processed/") is False:
             os.mkdir("data/processed")
             print("data/processed/ folder has been created successfully!")
 
+        # Index the corpus
+        nb_chunks: int = indexing(max_chunk_size, vLLM_path)
+
         # Prints the number of chunks processed
-        nb_chunks: int = 0
         print(f"Ingestion complete! Indexed {nb_chunks} chunks "
               "under data/processed/")
 

@@ -42,5 +42,7 @@
 
 - [LangChain Text Splitter](https://docs.langchain.com/oss/python/integrations/splitters)
 
+- [BM25](https://github.com/xhluca/bm25s)
+
 ### GitHub
 - [Overtekk](https://github.com/Overtekk/RAG-against-the-machine)
