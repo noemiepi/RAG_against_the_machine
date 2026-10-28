@@ -13,14 +13,12 @@ class Chunker():
 
     Attributes:
       - create_chunks(self, file: str,
-                      content: str) -> list[tuple[MinimalSource, str]] | None
-      - _chunk_py_file(self, file: str,
-                       content: str) -> list[tuple[MinimalSource, str]]
+                      content: str) -> list[MinimalSource] | None
+      - _chunk_py_file(self, file: str, content: str) -> list[MinimalSource]
       - _chunk_text_file(self, extension: str, file: str,
-                         content: str) -> list[tuple[MinimalSource, str]]
+                         content: str) -> list[MinimalSource]
       - _file_split(self, splitter: RecursiveCharacterTextSplitter,
-                    file_path: str,
-                    content: str) -> list[tuple[MinimalSource, str]]
+                    file_path: str, content: str) -> list[MinimalSource]
     """
     def __init__(self, chunk_size: int) -> None:
         """
@@ -33,16 +31,16 @@ class Chunker():
         self.chunk_overlap = self.chunk_size * CHUNK_OVERLAP_MULT
 
     def create_chunks(self, file: str,
-                      content: str) -> list[tuple[MinimalSource, str]] | None:
+                      content: str) -> list[MinimalSource] | None:
         """
         Creates the chunks according the file extension.
 
-        Parameter:
+        Parameters:
           - file: str
           - content: str
 
         Return
-        -> list[tuple[MinimalSource, str]] | None
+        -> list[MinimalSource] | None
         """
         extension = check_file_extension(file)
 
@@ -60,16 +58,16 @@ class Chunker():
     # --------------- #
     # Private Methods #
     # --------------- #
-    def _chunk_py_file(self, file: str,
-                       content: str) -> list[tuple[MinimalSource, str]]:
+    def _chunk_py_file(self, file: str, content: str) -> list[MinimalSource]:
         """
         Chunks python code.
 
-        Parameter:
+        Parameters:
           - file: str
+          - content: str
 
         Return
-        -> list[tuple[MinimalSource, str]]
+        -> list[MinimalSource]
         """
         python_splitter = RecursiveCharacterTextSplitter.from_language(
             language=Language.PYTHON,
@@ -80,7 +78,7 @@ class Chunker():
         return self._file_split(python_splitter, file, content)
 
     def _chunk_text_file(self, extension: str, file: str,
-                         content: str) -> list[tuple[MinimalSource, str]]:
+                         content: str) -> list[MinimalSource]:
         """
         Chunks Markdown and text files.
 
@@ -90,7 +88,7 @@ class Chunker():
           - content: str
 
         Return
-        -> list[tuple[MinimalSource, str]]
+        -> list[MinimalSource]
         """
         if extension == ".md":
             splitter = RecursiveCharacterTextSplitter.from_language(
@@ -109,8 +107,7 @@ class Chunker():
         return self._file_split(splitter, file, content)
 
     def _file_split(self, splitter: RecursiveCharacterTextSplitter,
-                    file_path: str,
-                    content: str) -> list[tuple[MinimalSource, str]]:
+                    file_path: str, content: str) -> list[MinimalSource]:
         """
         Splits the source file in the correct format and make it
         respect MinimalSource class format (file path, first and
@@ -122,9 +119,9 @@ class Chunker():
           - content: str
 
         Return
-        -> list[tuple[MinimalSource, str]]
+        -> list[MinimalSource]
         """
-        chunk_list: list[tuple[MinimalSource, str]] = []
+        chunk_list: list[MinimalSource] = []
         i: int = 0
 
         # Goes through every chunk of the splitter
@@ -144,9 +141,8 @@ class Chunker():
             # Update the index
             first_i = last_i + 1
 
-            chunk_list.append((MinimalSource(file_path=file_path,
-                                             first_character_index=first_i,
-                                             last_character_index=last_i),
-                               chunk))
+            chunk_list.append(MinimalSource(file_path=file_path,
+                                            first_character_index=first_i,
+                                            last_character_index=last_i))
 
         return chunk_list
