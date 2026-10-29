@@ -7,12 +7,13 @@ from typing import Any
 
 from src.indexer.chunker import Chunker
 from src.utils.file_utils import load_files
-from src.models.models import MinimalSource
 
 
 def indexing(max_chunk_size: int, vLLM_path: str) -> int:
     """
-    Index a corpus.
+    Index a corpus and creates a JSON file reuniting every
+    chunks with their name, their start and finish point.
+    It returns the number of chunks created.
 
     Parameters:
       - max_chunk_size: int
@@ -22,6 +23,7 @@ def indexing(max_chunk_size: int, vLLM_path: str) -> int:
     -> int
     """
     metadata_list: list[dict[str, Any]] = []
+    text_list: list[str] = []
 
     # Load the files
     file_dict: dict[str, str] = load_files(vLLM_path)
@@ -33,6 +35,7 @@ def indexing(max_chunk_size: int, vLLM_path: str) -> int:
     for file, content in tqdm(file_dict.items(), unit=" file",
                               desc="Chunking"):
         list_info = chunking.create_chunks(file, content)
+        text_list.append(content)
 
         if list_info:
             for metadata in list_info:
@@ -40,15 +43,18 @@ def indexing(max_chunk_size: int, vLLM_path: str) -> int:
 
     nb_chunk: int = create_source_info(metadata_list)
 
+    bm25_index(text_list, metadata_list)
+
     return nb_chunk
 
 
 def create_source_info(metadata_list: list[dict[str, Any]]) -> int:
     """
-    Create a JSON file with every chunk given.
+    Create a JSON file with every chunk given
+    and return how many there are.
 
     Parameter:
-      - list_info: dict[str, list[MinimalSource]]
+      - metadata_list: list[dict[str, Any]]
 
     Return
     -> int
@@ -64,30 +70,32 @@ def create_source_info(metadata_list: list[dict[str, Any]]) -> int:
             }
         )
 
-    with open("data/processed/source_information.json",
+    with open("data/processed/chunks/source_information.json",
               "w", encoding='utf-8') as f:
         json.dump(json_file, f, indent=4)
 
     return len(json_file)
 
 
-# def bm25(texts: list[str], corpus: jsp) -> None:
-#     """
-#     Creates an index for the bm25 retrival.
+def bm25_index(texts: list[str], corpus: list[dict[str, Any]]) -> None:
+    """
+    Creates an index for the bm25 retrival.
 
-#     Parameters:
-#       - texts: list[str]
-#       - corpus: jsp
-#     """
-#     # Create a stemmer
-#     stemmer = Stemmer.Stemmer("english")
+    Parameters:
+      - texts: list[str]
+      - corpus: list[dict[str, Any]]
+    """
+    # Create a stemmer
+    stemmer = Stemmer.Stemmer("english")
 
-#     # Create the BM25 model
-#     retriever = bm25s.BM25()
+    # Create the BM25 model
+    retriever = bm25s.BM25()
 
-#     # Tokenize the corpus
-#     corpus_token = bm25s.tokenize(texts, stopwords="en", stemmer=stemmer)
+    # Tokenize the corpus
+    corpus_token = bm25s.tokenize(texts, stopwords="en", stemmer=stemmer)
 
-#     # Index the corpus and save the array to a directory
-#     retriever.index(corpus_token)
-#     retriever.save("data/processed/", corpus=json_serializable)
+    # Index the corpus and save the array to a directory
+    retriever.index(corpus_token)
+
+    # Save the corpus with the model to be used elsewhere
+    retriever.save("data/processed/bm25", corpus=corpus)

@@ -1,6 +1,7 @@
 import os
 
 from src.indexer.index import indexing
+from src.retriever.retrieval import retriever
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -42,10 +43,17 @@ class RAGEngine():
         if os.path.exists(vLLM_path) is False:
             raise ValueError("Path to vllm does not exist")
 
-        # If the folder doesn't exist, it is created
-        if os.path.exists("data/processed/") is False:
+        # If the folders don't exist, it is created
+        if os.path.exists("data/processed") is False:
             os.mkdir("data/processed")
-            print("data/processed/ folder has been created successfully!")
+
+            if os.path.exists("data/processed/chunks") is False:
+                os.mkdir("data/processed/chunks")
+
+            if os.path.exists("data/processed/bm25") is False:
+                os.mkdir("data/processed/bm25")
+
+            print("Every missing folder has been created successfully!")
 
         # Index the corpus
         nb_chunks: int = indexing(max_chunk_size, vLLM_path)
@@ -54,7 +62,7 @@ class RAGEngine():
         print(f"Ingestion complete! Indexed {nb_chunks} chunks "
               "under data/processed/")
 
-    def search(self, query: str, k: int) -> str:
+    def search(self, query: str, k: int) -> list[str]:
         """
         Return the top-k sources for a single query.
 
@@ -63,9 +71,18 @@ class RAGEngine():
           - k: int
 
         Return
-        -> str
+        -> list[str]
         """
-        pass
+        ref_list: list[str] = []
+
+        # Retrieve the top-k sources
+        ref_list = retriever(query, k)
+
+        # Print every source previously fetched
+        for ref in ref_list:
+            print(ref)
+
+        return ref_list
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:

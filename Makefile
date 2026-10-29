@@ -17,7 +17,7 @@ MYPY_FLAGS=--warn-return-any --warn-unused-ignores --ignore-missing-imports \
 #       Rules       #
 # ----------------- #
 
-.PHONY: all install run debug clean lint lint-strict lint-format index
+.PHONY: all install run debug clean lint lint-strict lint-format index search
 
 
 all: install run
@@ -71,13 +71,19 @@ lint-strict:
 	exit $$status
 
 # ----------------- #
-#       Rules       #
+#    Bonus Rules    #
 # ----------------- #
 
-index:
-	@clear
-	@echo "$(BLUE)Indexing the files...$(END)"
-	$(PYTHON) -m src index --max_chunk_size 2000
+index: install
+	   @clear
+	   @echo "$(BLUE)Indexing the files...$(END)"
+	   $(PYTHON) -m src index --max_chunk_size 2000
+
+
+search: install
+		@clear
+		@echo "$(BLUE)Retrieving the corresponding files to answer "How to configure the OpenAI server?"...$(END)"
+		$(PYTHON) -m src search "How to configure the OpenAI server?" --k 5
 
 
 # ----------------- #

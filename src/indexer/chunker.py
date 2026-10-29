@@ -139,7 +139,7 @@ class Chunker():
             last_i: int = first_i + len(chunk)
 
             # Update the index
-            first_i = last_i + 1
+            i = first_i + 1
 
             chunk_list.append(MinimalSource(file_path=file_path,
                                             first_character_index=first_i,
