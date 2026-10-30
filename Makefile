@@ -13,6 +13,8 @@ INSTALL_UV = curl -LsSf https://astral.sh/uv/install.sh | sh
 MYPY_FLAGS=--warn-return-any --warn-unused-ignores --ignore-missing-imports \
 --disallow-untyped-defs --check-untyped-defs \
 
+STUDENT_SEARCH_RESULTS_PATH = data/output/search_results/UnansweredQuestions/dataset_docs_public.json
+
 # ----------------- #
 #       Rules       #
 # ----------------- #
@@ -52,6 +54,7 @@ clean:
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 	find . -name "*.pyc" -delete
 	rm -rf data/processed
+	rm -rf data/output
 	@echo "\n$(GREEN)Folder cleaned!$(END)"
 
 
@@ -85,6 +88,28 @@ search: install
 		@echo "$(BLUE)Retrieving the corresponding files to answer "How to configure the OpenAI server?"...$(END)"
 		$(PYTHON) -m src search "How to configure the OpenAI server?" --k 5
 
+
+search_dataset: install
+				@clear
+				@echo "$(BLUE)Searching a dataset...$(END)"
+				$(PYTHON) -m src search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json --k 10 --save_directory data/output/search_results/UnansweredQuestions
+
+answer: install
+		@clear
+		@echo "$(BLUE)Answering "How to configure the OpenAI server?"...$(END)"
+		$(PYTHON) -m src answer "How to configure the OpenAI server?" --k 5
+
+
+answer_dataset: install
+				@clear
+				@echo "$(BLUE)Answering a dataset...$(END)"
+				$(PYTHON) -m src answer_dataset --student_search_results_path ${STUDENT_SEARCH_RESULTS_PATH} --save_directory data/output/search_results_and_answer/UnansweredQuestions
+
+
+evaluate: install
+		  @clear
+		  @echo "$(BLUE)Evaluating the recall@k...$(END)"
+		  $(PYTHON) -m src evaluate --student_search_results_path ${STUDENT_SEARCH_RESULTS_PATH} --dataset_path data/datasets/AnsweredQuestions/dataset_docs_public.json
 
 # ----------------- #
 #       Colors      #

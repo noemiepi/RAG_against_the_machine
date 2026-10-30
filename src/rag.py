@@ -1,7 +1,9 @@
 import os
 
 from src.indexer.index import indexing
-from src.retriever.retrieval import retriever
+from src.retriever.retrieval import RetrieverEngine
+from src.models.models import (MinimalSource, AnsweredQuestion,
+                               UnansweredQuestion)
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -62,7 +64,7 @@ class RAGEngine():
         print(f"Ingestion complete! Indexed {nb_chunks} chunks "
               "under data/processed/")
 
-    def search(self, query: str, k: int) -> list[str]:
+    def search(self, query: str, k: int) -> list[MinimalSource]:
         """
         Return the top-k sources for a single query.
 
@@ -71,18 +73,37 @@ class RAGEngine():
           - k: int
 
         Return
-        -> list[str]
+        -> list[MinimalSource]
         """
-        ref_list: list[str] = []
+        chunk_list: list[MinimalSource] = []
+
+        # Check the given parameters
+        if query == "":
+            raise ValueError("The query cannot be empty")
+        if k <= 0:
+            raise ValueError("Invalid k. The value cannot be below "
+                             "or equal to 0")
+
+        # Check if the indexing was previously done
+        if os.path.exists("data/processed") is False:
+            raise ValueError("Indexing is not made. "
+                             "Please type the command "
+                             "'make index' and retry")
+
+        # Check if the folder exists
+        if os.path.exists("data/output") is False:
+            os.mkdir("data/output")
 
         # Retrieve the top-k sources
-        ref_list = retriever(query, k)
+        retriever = RetrieverEngine(k)
 
-        # Print every source previously fetched
-        for ref in ref_list:
-            print(ref)
+        chunk_list = retriever.retrieve(query)
 
-        return ref_list
+        for model in chunk_list:
+            print(f"{model.file_path} [{model.first_character_index}:"
+                  f"{model.last_character_index}]")
+
+        return chunk_list
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:
@@ -95,7 +116,30 @@ class RAGEngine():
           - k: int,
           - save_directory: str
         """
-        pass
+        file_name: str = "dataset_docs_public.json"
+        chunk_list: list[MinimalSource] = []
+
+        # Check the given parameters
+        if k <= 0:
+            raise ValueError("Invalid k. The value cannot be below "
+                             "or equal to 0")
+        if os.path.exists(dataset_path) is False:
+            raise ValueError("Path to the dataset does not exist")
+
+        # Check if the path exists
+        if os.path.exists(save_directory) is False:
+            print("Path doesn't exist yet")
+
+        # Retrieve the top-k sources
+        retriever = RetrieverEngine(k)
+
+        dataset = retriever.create_dataset(dataset_path)
+        if dataset:
+            chunk_list = retriever.retrieve_dataset()
+            retriever.save_dataset()
+
+        print(f"Saved student_search_results to {save_directory}/{file_name}")
+        print("work in progress")
 
     def answer(self, query: str, k: int) -> None:
         """
@@ -105,7 +149,14 @@ class RAGEngine():
           - query: str
           - k: int
         """
-        pass
+        # Check the given parameters
+        if query == "":
+            raise ValueError("The query cannot be empty")
+        if k <= 0:
+            raise ValueError("Invalid k. The value cannot be below "
+                             "or equal to 0")
+
+        print("work in progress")
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
@@ -117,7 +168,7 @@ class RAGEngine():
           - student_search_results_path: str
           - save_directory: str
         """
-        pass
+        print("work in progress")
 
     def evaluate(self, student_search_results_path: str,
                  dataset_path: str) -> None:
@@ -129,4 +180,4 @@ class RAGEngine():
           - student_search_results_path: str
           - dataset_path: str
         """
-        pass
+        print("work in progress")

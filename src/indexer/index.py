@@ -79,7 +79,7 @@ def create_source_info(metadata_list: list[dict[str, Any]]) -> int:
 
 def bm25_index(texts: list[str], corpus: list[dict[str, Any]]) -> None:
     """
-    Creates an index for the bm25 retrival.
+    Creates an index for the bm25 retrieval.
 
     Parameters:
       - texts: list[str]
