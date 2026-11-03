@@ -22,9 +22,15 @@ def write_search_results(query: str, retrieved_sources: list[MinimalSource],
                                         k=k)
 
     # Write the model in a JSON file
-    with open("data/output/search_operations.json",
-              "w", encoding='utf-8') as f:
-        f.write(final_output.model_dump_json(indent=4))
+    try:
+        with open("data/output/search_operations.json",
+                  "w", encoding='utf-8') as f:
+            f.write(final_output.model_dump_json(indent=4))
+
+    except PermissionError:
+        raise ValueError(f"Permission error with this file: {f}")
+    except Exception as e:
+        raise ValueError(e)
 
 
 def write_answer_results(query: str, retrieved_sources: list[MinimalSource],

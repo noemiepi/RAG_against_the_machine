@@ -11,8 +11,6 @@
 ### Example Usage
 *Provide clear examples of running your system*
 
-## Description
-
 ## System Architecture
 *Describe your RAG pipeline components and how they interact*
 

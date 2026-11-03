@@ -1,10 +1,13 @@
+import os
 import json
 import bm25s
 import Stemmer
 
-from src.models.models import (MinimalSource, RagDataset,
+from typing import Any
+
+from src.models.models import (MinimalSource, MinimalSearchResults,
+                               StudentSearchResults, RagDataset,
                                AnsweredQuestion, UnansweredQuestion)
-from src.utils.search_answer_utils import write_search_results
 
 
 class RetrieverEngine():
@@ -19,8 +22,8 @@ class RetrieverEngine():
                        ) -> list[AnsweredQuestion | UnansweredQuestion] | None:
       - retrieve_dataset(
             self, dataset: list[AnsweredQuestion | UnansweredQuestion]
-            ) -> list[MinimalSource]
-      - save_dataset(self, chunk_list: list[MinimalSource],
+            ) -> list[MinimalSearchResults]
+      - save_dataset(self, chunks: list[MinimalSearchResults],
                      file_path: str) -> None
     """
     def __init__(self, k: int) -> None:
@@ -71,9 +74,6 @@ class RetrieverEngine():
                                                    first_character_index=first,
                                                    last_character_index=last))
 
-        # Write a JSON file which comply to StudentSearchResults
-        write_search_results(query, retrieved_sources, self.k)
-
         return retrieved_sources
 
     def create_dataset(
@@ -90,17 +90,23 @@ class RetrieverEngine():
         """
         rag_dataset: list[AnsweredQuestion | UnansweredQuestion] = []
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            # Validate the model
-            data = json.load(f)
-            dataset = RagDataset.model_validate(data)
-            rag_dataset.append(dataset)
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                # Validate the model
+                data = json.load(f)
+                dataset = RagDataset.model_validate(data)
+                rag_dataset = dataset.rag_questions
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
 
         return rag_dataset
 
     def retrieve_dataset(
             self, dataset: list[AnsweredQuestion | UnansweredQuestion]
-            ) -> list[MinimalSource]:
+            ) -> list[MinimalSearchResults]:
         """
         Retrieve top-k chunks to answer every query.
 
@@ -108,17 +114,42 @@ class RetrieverEngine():
           - dataset: list[AnsweredQuestion | UnansweredQuestion]
 
         Return
-        -> list[MinimalSource]
+        -> list[MinimalSearchResults]
         """
-        pass
+        result_list: list[MinimalSearchResults] = []
 
-    def save_dataset(self, chunk_list: list[MinimalSource],
-                     file_path: str) -> None:
+        for data in dataset:
+            result_list.append(MinimalSearchResults(
+                question_id=data.question_id,
+                question=data.question,
+                retrieved_sources=self.retrieve(data.question)
+            ))
+
+        return result_list
+
+    def save_dataset(self, chunks: list[MinimalSearchResults],
+                     file_path: str, k: int) -> None:
         """
         Save the dataset in the wanted folder.
 
         Parameters:
-          - chunk_list: list[MinimalSource]
+          - chunk_list: dict[str, list[MinimalSource]]
           - file_path: str
+          - k: int
         """
-        pass
+        final_output: dict[str, Any] = {}
+
+        final_output = StudentSearchResults(search_results=chunks,
+                                            k=k)
+
+        # Write the model in a JSON file
+        try:
+            with open(file_path, "w", encoding='utf-8') as f:
+                f.write(final_output.model_dump_json(indent=4))
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
+
+        print(f"Saved student_search_results to {file_path}")

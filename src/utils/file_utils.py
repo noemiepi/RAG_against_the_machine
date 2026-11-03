@@ -57,7 +57,6 @@ def load_files(vLLM_path: str) -> dict[str, str]:
                 except PermissionError:
                     raise ValueError("Permission error with this file: "
                                      f"{file}")
-
                 except Exception as e:
                     raise ValueError(e)
 

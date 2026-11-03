@@ -2,8 +2,10 @@ import os
 
 from src.indexer.index import indexing
 from src.retriever.retrieval import RetrieverEngine
+from src.answerer.answer import AnswerGeneration
 from src.models.models import (MinimalSource, AnsweredQuestion,
                                UnansweredQuestion)
+from src.utils.search_answer_utils import write_search_results
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -48,9 +50,6 @@ class RAGEngine():
         # If the folders don't exist, it is created
         if os.path.exists("data/processed") is False:
             os.mkdir("data/processed")
-
-            if os.path.exists("data/processed/chunks") is False:
-                os.mkdir("data/processed/chunks")
 
             if os.path.exists("data/processed/bm25") is False:
                 os.mkdir("data/processed/bm25")
@@ -99,6 +98,9 @@ class RAGEngine():
 
         chunk_list = retriever.retrieve(query)
 
+        # Write a JSON file which comply to StudentSearchResults
+        write_search_results(query, chunk_list, self.k)
+
         for model in chunk_list:
             print(f"{model.file_path} [{model.first_character_index}:"
                   f"{model.last_character_index}]")
@@ -116,8 +118,8 @@ class RAGEngine():
           - k: int,
           - save_directory: str
         """
-        file_name: str = "dataset_docs_public.json"
-        chunk_list: list[MinimalSource] = []
+        chunk_list: dict[AnsweredQuestion | UnansweredQuestion,
+                         list[MinimalSource]] = {}
 
         # Check the given parameters
         if k <= 0:
@@ -127,19 +129,34 @@ class RAGEngine():
             raise ValueError("Path to the dataset does not exist")
 
         # Check if the path exists
+        folders = save_directory.split("/")
+
         if os.path.exists(save_directory) is False:
-            print("Path doesn't exist yet")
+            # Check the file_path and create mising folder
+            folder_path: str = ""
+            for folder in folders:
+                folder_path += folder
+
+                if os.path.exists(folder_path) is False:
+                    os.mkdir(folder_path)
+
+                folder_path += "/"
+
+        # Check that a file to stock the data exists
+        if not folders[-1].endswith(".json"):
+            file_name: str = "dataset_docs_public.json"
+            if save_directory.endswith("/"):
+                save_directory += file_name
+            else:
+                save_directory += f"/{file_name}"
 
         # Retrieve the top-k sources
         retriever = RetrieverEngine(k)
 
         dataset = retriever.create_dataset(dataset_path)
         if dataset:
-            chunk_list = retriever.retrieve_dataset()
-            retriever.save_dataset()
-
-        print(f"Saved student_search_results to {save_directory}/{file_name}")
-        print("work in progress")
+            chunk_list = retriever.retrieve_dataset(dataset)
+            retriever.save_dataset(chunk_list, save_directory, k)
 
     def answer(self, query: str, k: int) -> None:
         """
@@ -156,7 +173,10 @@ class RAGEngine():
             raise ValueError("Invalid k. The value cannot be below "
                              "or equal to 0")
 
-        print("work in progress")
+        search_result = self.search(query, k)
+
+        generator = AnswerGeneration()
+        generator.answer(search_result)
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
@@ -168,7 +188,33 @@ class RAGEngine():
           - student_search_results_path: str
           - save_directory: str
         """
-        print("work in progress")
+        # Check if the paths exists
+        if os.path.exists(student_search_results_path) is False:
+            raise ValueError("Path to the student search results do not exist")
+
+        folders = save_directory.split("/")
+
+        if os.path.exists(save_directory) is False:
+            # Check the file_path and create mising folder
+            folder_path: str = ""
+            for folder in folders:
+                folder_path += folder
+
+                if os.path.exists(folder_path) is False:
+                    os.mkdir(folder_path)
+
+                folder_path += "/"
+
+        # Check that a file to stock the data exists
+        if not folders[-1].endswith(".json"):
+            file_name: str = "dataset_docs_public.json"
+            if save_directory.endswith("/"):
+                save_directory += file_name
+            else:
+                save_directory += f"/{file_name}"
+
+        generator = AnswerGeneration()
+        generator.answer_dataset()
 
     def evaluate(self, student_search_results_path: str,
                  dataset_path: str) -> None:
@@ -180,4 +226,9 @@ class RAGEngine():
           - student_search_results_path: str
           - dataset_path: str
         """
-        print("work in progress")
+        # Check if the paths exists
+        if os.path.exists(student_search_results_path) is False:
+            raise ValueError("Path to the student search results do not exist")
+
+        if os.path.exists(dataset_path) is False:
+            raise ValueError("Path to the dataset does not exist")

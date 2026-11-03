@@ -70,9 +70,14 @@ def create_source_info(metadata_list: list[dict[str, Any]]) -> int:
             }
         )
 
-    with open("data/processed/chunks/source_information.json",
-              "w", encoding='utf-8') as f:
-        json.dump(json_file, f, indent=4)
+    try:
+        with open("data/processed/chunks.json", "w", encoding='utf-8') as f:
+            json.dump(json_file, f, indent=4)
+
+    except PermissionError:
+        raise ValueError(f"Permission error with this file: {f}")
+    except Exception as e:
+        raise ValueError(e)
 
     return len(json_file)
 
