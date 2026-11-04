@@ -10,6 +10,10 @@ from src.models.models import (MinimalSource, MinimalSearchResults,
                                AnsweredQuestion, UnansweredQuestion)
 
 
+end = "\033[0m"
+g = "\033[32m\033[5m\033[1m"
+
+
 class RetrieverEngine():
     """
     This is the retriever. It will group together every
@@ -44,9 +48,6 @@ class RetrieverEngine():
         Return
         -> list[MinimalSource]
         """
-        file_path: str = ""
-        first: int = 0
-        last: int = 0
         retrieved_sources: list[MinimalSource] = []
 
         # Tokenize the query
@@ -55,42 +56,12 @@ class RetrieverEngine():
         # Get top-k results as a tuple doc-ids/scores
         results, scores = self.retriever.retrieve(query_token, k=self.k)
 
-        try:
-            with open("data/processed/chunks.json", "r") as f:
-                chunk = json.load(f)
-
-        except PermissionError:
-            raise ValueError(f"Permission error with this file: {f}")
-        except Exception as e:
-            raise ValueError(e)
+        source = results[0]
 
         # Write every information needed
-        for i in results[0]:
-        # for i in range(self.k):
-            # doc = results[0, i]
-
-            # for key, value in doc.items():
-            #     if key == "file_path":
-            #         file_path = value
-
-            #     if key == "first_character_index":
-            #         first = value
-
-            #     if key == "last_character_index":
-            #         last = value
-
-                # for lst in chunk:
-                #     for key1, value1 in lst.items():
-                #         if key1 == "file_path" and value1 == file_path:
-                #             for key1, value1 in lst.items():
-                #                 if key1 == "content":
-                #                     content = value1
-
-            # Add the source to a reference list
-            retrieved_sources.append(MinimalSource(file_path=file_path,
-                                                   first_character_index=first,
-                                                   last_character_index=last,
-                                                   content=content))
+        for i in source:
+            chunk_result = MinimalSource.model_validate(i)
+            retrieved_sources.append(chunk_result)
 
         return retrieved_sources
 
@@ -170,4 +141,4 @@ class RetrieverEngine():
         except Exception as e:
             raise ValueError(e)
 
-        print(f"Saved student_search_results to {file_path}")
+        print(f"{g}[INFO]{end}: Saved student_search_results to {file_path}")

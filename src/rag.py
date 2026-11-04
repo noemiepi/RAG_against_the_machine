@@ -5,10 +5,14 @@ from src.retriever.retrieval import RetrieverEngine
 from src.answerer.answer import AnswerGeneration
 from src.models.models import (MinimalSource, AnsweredQuestion,
                                UnansweredQuestion)
-from src.utils.search_answer_utils import write_search_results
+from src.utils.search_answer_utils import (write_search_results,
+                                           write_answer_results)
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
+
+end = "\033[0m"
+g = "\033[32m\033[5m\033[1m"
 
 
 class RAGEngine():
@@ -18,7 +22,8 @@ class RAGEngine():
 
     Attributes:
       - index(self, max_chunk_size: int) -> None
-      - search(self, query: str, k: int) -> str
+      - search(self, query: str, k: int,
+               verbose: bool = True) -> list[MinimalSource] | None
       - search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None
       - answer(self, query: str, k: int) -> None
@@ -63,16 +68,18 @@ class RAGEngine():
         print(f"Ingestion complete! Indexed {nb_chunks} chunks "
               "under data/processed/")
 
-    def search(self, query: str, k: int) -> list[MinimalSource]:
+    def search(self, query: str, k: int,
+               verbose: bool = True) -> list[MinimalSource] | None:
         """
         Return the top-k sources for a single query.
 
         Parameters:
           - query: str
           - k: int
+          - verbose: bool
 
         Return
-        -> list[MinimalSource]
+        -> list[MinimalSource] | None
         """
         chunk_list: list[MinimalSource] = []
 
@@ -101,11 +108,18 @@ class RAGEngine():
         # Write a JSON file which comply to StudentSearchResults
         write_search_results(query, chunk_list, k)
 
-        for model in chunk_list:
-            print(f"{model.file_path} [{model.first_character_index}:"
-                  f"{model.last_character_index}]")
+        if verbose is True:
+            print(f"\nQuery: {query}\n")
+            print("Sources:")
+            for model in chunk_list:
+                print(f"  - {model.file_path} [{model.first_character_index}:"
+                      f"{model.last_character_index}]")
 
-        return chunk_list
+            print(f"{g}[INFO]{end}: Saved search results to "
+                  "data/output/search_operations.json")
+
+        else:
+            return chunk_list
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:
@@ -173,10 +187,25 @@ class RAGEngine():
             raise ValueError("Invalid k. The value cannot be below "
                              "or equal to 0")
 
-        search_result = self.search(query, k)
+        # Reunite necessary resources
+        search_result = self.search(query, k, False)
 
+        # Create the generator
         generator = AnswerGeneration()
-        generator.answer(query, search_result)
+        answer = generator.answer(query, search_result, None)
+
+        # Write a JSON file which comply to StudentSearchResultsAndAnswer
+        write_answer_results(query, search_result, answer, k)
+
+        print(f"\nQuery: {query}\n")
+        print(f"Answer: {answer.answer}\n")
+        print("Sources:")
+        for model in search_result:
+            print(f"  - {model.file_path} [{model.first_character_index}:"
+                  f"{model.last_character_index}]")
+
+        print(f"{g}[INFO]{end}: Saved answer results to "
+              "data/output/answer_operations.json")
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:

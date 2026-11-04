@@ -1,9 +1,12 @@
 import uuid
+import tqdm
 
 from transformers import pipeline
 
 from src.models.models import (StudentSearchResultsAndAnswer, MinimalAnswer,
                                MinimalSearchResults, MinimalSource)
+
+MAX_NEW_TOKENS: int = 256
 
 
 class AnswerGeneration():
@@ -42,8 +45,13 @@ class AnswerGeneration():
         Return
         -> MinimalAnswer
         """
-        prompt: list[dict[str, str]] = self._generate_prompt()
+        prompt: list[dict[str, str]] = self._generate_prompt(question,
+                                                             retrived_sources)
         gen_answer: str = self._generate_answer(prompt)
+
+        clean_answer: str = gen_answer.replace("<think>",
+                                               "").replace("</think>",
+                                                           "").strip()
 
         answer = MinimalAnswer(
             question_id=(
@@ -51,7 +59,7 @@ class AnswerGeneration():
                 else str(question_id)),
             question=question,
             retrieved_sources=retrived_sources,
-            answer=gen_answer
+            answer=clean_answer
         )
 
         return answer
@@ -70,13 +78,17 @@ class AnswerGeneration():
         """
         Load the pipeline to generate text-answers.
         """
-        # Load the model using a pipeline
-        self._pipeline = pipeline(
-            task="text-generation",
-            model=self._model,
-            device=0,
-            clean_up_tokenization_spaces=False
-        )
+        try:
+            # Load the model using a pipeline
+            self._pipe = pipeline(
+                task="text-generation",
+                model=self._model,
+                device=0,
+                clean_up_tokenization_spaces=False
+            )
+
+        except Exception:
+            raise ValueError("Unable to load the model")
 
     def _generate_prompt(self, question: str,
                          sources: list[MinimalSource]) -> list[dict[str, str]]:
@@ -91,7 +103,13 @@ class AnswerGeneration():
         -> list[dict[str, str]]
         """
         # Format the sources into a form usable by the pipeline
-        formatted_sources: str = ""
+        formatted_sources: str = "\n".join(
+            [str(source.content) for source in sources]
+        )
+
+        # Cut the text if it's too long
+        if len(formatted_sources) > self._context_limit:
+            formatted_sources = formatted_sources[:self._context_limit]
 
         # Return the prepared prompt
         # (/no_think prevents the model from using <think>)
@@ -106,7 +124,10 @@ class AnswerGeneration():
                     f"{formatted_sources}"
                 ),
             },
-            {"role": "user", "content": f"User' prompt: '{question}'/no_think"}
+            {
+                "role": "user",
+                "content": f"User' prompt: '{question}'/no_think"
+            }
         ]
 
     def _generate_answer(self, prompt: list[dict[str, str]]) -> str:
@@ -119,5 +140,5 @@ class AnswerGeneration():
         Return
         -> str
         """
-        output = self._pipeline(prompt, return_full_text=False)
-        return str(output)
+        output = self._pipe(prompt, return_full_text=False)
+        return str(output[0]["generated_text"])

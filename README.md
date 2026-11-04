@@ -33,6 +33,8 @@
 ### Notions
 - [Introduction to RAG](https://blog.stephane-robert.info/docs/developper/programmation/python/rag-introduction/)
 
+- [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B)
+
 #### Dependencies
 - [Python Fire](https://github.com/google/python-fire)
 
