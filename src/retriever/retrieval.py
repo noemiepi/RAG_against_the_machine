@@ -1,9 +1,9 @@
-import os
 import json
 import bm25s
 import Stemmer
 
 from typing import Any
+from json import JSONDecodeError
 
 from src.models.models import (MinimalSource, MinimalSearchResults,
                                StudentSearchResults, RagDataset,
@@ -55,24 +55,42 @@ class RetrieverEngine():
         # Get top-k results as a tuple doc-ids/scores
         results, scores = self.retriever.retrieve(query_token, k=self.k)
 
+        try:
+            with open("data/processed/chunks.json", "r") as f:
+                chunk = json.load(f)
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
+
         # Write every information needed
-        for i in range(self.k):
-            doc = results[0, i]
+        for i in results[0]:
+        # for i in range(self.k):
+            # doc = results[0, i]
 
-            for key, value in doc.items():
-                if key == "file_path":
-                    file_path = value
+            # for key, value in doc.items():
+            #     if key == "file_path":
+            #         file_path = value
 
-                if key == "first_character_index":
-                    first = value
+            #     if key == "first_character_index":
+            #         first = value
 
-                if key == "last_character_index":
-                    last = value
+            #     if key == "last_character_index":
+            #         last = value
+
+                # for lst in chunk:
+                #     for key1, value1 in lst.items():
+                #         if key1 == "file_path" and value1 == file_path:
+                #             for key1, value1 in lst.items():
+                #                 if key1 == "content":
+                #                     content = value1
 
             # Add the source to a reference list
             retrieved_sources.append(MinimalSource(file_path=file_path,
                                                    first_character_index=first,
-                                                   last_character_index=last))
+                                                   last_character_index=last,
+                                                   content=content))
 
         return retrieved_sources
 

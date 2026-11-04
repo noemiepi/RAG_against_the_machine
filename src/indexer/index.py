@@ -67,6 +67,7 @@ def create_source_info(metadata_list: list[dict[str, Any]]) -> int:
                 "file_path": lst["file_path"],
                 "first_character_index": lst["first_character_index"],
                 "last_character_index": lst["last_character_index"],
+                "content": lst["content"]
             }
         )
 

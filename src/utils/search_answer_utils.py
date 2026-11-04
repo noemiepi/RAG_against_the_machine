@@ -1,3 +1,5 @@
+import uuid
+
 from src.models.models import (MinimalSource, MinimalAnswer,
                                MinimalSearchResults, StudentSearchResults,
                                StudentSearchResultsAndAnswer)
@@ -14,7 +16,7 @@ def write_search_results(query: str, retrieved_sources: list[MinimalSource],
       - retrieved_sources: list[MinimalSource]
       - k: int
     """
-    min_search = [MinimalSearchResults(question_id="q1",
+    min_search = [MinimalSearchResults(question_id=str(uuid.uuid4()),
                                        question=query,
                                        retrieved_sources=retrieved_sources)]
 

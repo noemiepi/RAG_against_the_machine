@@ -99,7 +99,7 @@ class RAGEngine():
         chunk_list = retriever.retrieve(query)
 
         # Write a JSON file which comply to StudentSearchResults
-        write_search_results(query, chunk_list, self.k)
+        write_search_results(query, chunk_list, k)
 
         for model in chunk_list:
             print(f"{model.file_path} [{model.first_character_index}:"
@@ -176,7 +176,7 @@ class RAGEngine():
         search_result = self.search(query, k)
 
         generator = AnswerGeneration()
-        generator.answer(search_result)
+        generator.answer(query, search_result)
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
