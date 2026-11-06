@@ -37,7 +37,7 @@ def write_search_results(query: str, retrieved_sources: list[MinimalSource],
 
 
 def write_answer_results(query: str, retrieved_sources: list[MinimalSource],
-                         answer: str, k: int) -> None:
+                         answer: MinimalAnswer, k: int) -> None:
     """
     It writes the query, its id, top-k retrieved sources,
     the query's answer and k in a JSON file conforming

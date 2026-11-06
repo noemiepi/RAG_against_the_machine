@@ -2,9 +2,6 @@ import json
 import bm25s
 import Stemmer
 
-from typing import Any
-from json import JSONDecodeError
-
 from src.models.models import (MinimalSource, MinimalSearchResults,
                                StudentSearchResults, RagDataset,
                                AnsweredQuestion, UnansweredQuestion)
@@ -122,12 +119,10 @@ class RetrieverEngine():
         Save the dataset in the wanted folder.
 
         Parameters:
-          - chunk_list: dict[str, list[MinimalSource]]
+          - chunk_list: list[MinimalSearchResults]
           - file_path: str
           - k: int
         """
-        final_output: dict[str, Any] = {}
-
         final_output = StudentSearchResults(search_results=chunks,
                                             k=k)
 
@@ -141,4 +136,4 @@ class RetrieverEngine():
         except Exception as e:
             raise ValueError(e)
 
-        print(f"{g}[INFO]{end}: Saved student_search_results to {file_path}")
+        print(f"\n{g}[INFO]{end}: Saved student_search_results to {file_path}")

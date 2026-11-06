@@ -3,8 +3,7 @@ import os
 from src.indexer.index import indexing
 from src.retriever.retrieval import RetrieverEngine
 from src.answerer.answer import AnswerGeneration
-from src.models.models import (MinimalSource, AnsweredQuestion,
-                               UnansweredQuestion)
+from src.models.models import MinimalSource
 from src.utils.search_answer_utils import (write_search_results,
                                            write_answer_results)
 
@@ -79,7 +78,7 @@ class RAGEngine():
           - verbose: bool
 
         Return
-        -> list[MinimalSource] | None
+        -> list[MinimalSource]
         """
         chunk_list: list[MinimalSource] = []
 
@@ -115,11 +114,11 @@ class RAGEngine():
                 print(f"  - {model.file_path} [{model.first_character_index}:"
                       f"{model.last_character_index}]")
 
-            print(f"{g}[INFO]{end}: Saved search results to "
+            print(f"\n{g}[INFO]{end}: Saved search results to "
                   "data/output/search_operations.json")
+            return None
 
-        else:
-            return chunk_list
+        return chunk_list
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:
@@ -132,9 +131,6 @@ class RAGEngine():
           - k: int,
           - save_directory: str
         """
-        chunk_list: dict[AnsweredQuestion | UnansweredQuestion,
-                         list[MinimalSource]] = {}
-
         # Check the given parameters
         if k <= 0:
             raise ValueError("Invalid k. The value cannot be below "
@@ -204,7 +200,7 @@ class RAGEngine():
             print(f"  - {model.file_path} [{model.first_character_index}:"
                   f"{model.last_character_index}]")
 
-        print(f"{g}[INFO]{end}: Saved answer results to "
+        print(f"\n{g}[INFO]{end}: Saved answer results to "
               "data/output/answer_operations.json")
 
     def answer_dataset(self, student_search_results_path: str,
@@ -243,7 +239,11 @@ class RAGEngine():
                 save_directory += f"/{file_name}"
 
         generator = AnswerGeneration()
-        generator.answer_dataset()
+
+        dataset = generator.create_dataset(student_search_results_path)
+        if dataset:
+            answers = generator.answer_dataset(dataset)
+            generator.save_dataset(dataset, answers, save_directory)
 
     def evaluate(self, student_search_results_path: str,
                  dataset_path: str) -> None:

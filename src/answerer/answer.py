@@ -1,12 +1,17 @@
 import uuid
-import tqdm
+import json
 
+from tqdm import tqdm
 from transformers import pipeline
 
 from src.models.models import (StudentSearchResultsAndAnswer, MinimalAnswer,
-                               MinimalSearchResults, MinimalSource)
+                               StudentSearchResults, MinimalSource)
 
 MAX_NEW_TOKENS: int = 256
+
+
+end = "\033[0m"
+g = "\033[32m\033[5m\033[1m"
 
 
 class AnswerGeneration():
@@ -17,7 +22,12 @@ class AnswerGeneration():
     Attributes:
       - answer(self, query: str, retrived_sources: list[MinimalSource],
                question_id: uuid.UUID | None) -> MinimalAnswer
-      - answer_dataset(self) -> None
+      - answer_dataset(self,
+                       dataset: StudentSearchResults) -> list[MinimalAnswer]
+      - create_dataset(self, file_path: str) -> StudentSearchResults | None
+      - save_dataset(self, search_results: StudentSearchResults,
+                     answers: list[MinimalAnswer],
+                     file_path: str) -> StudentSearchResultsAndAnswer
       - _load_llm(self) -> None
       - _generate_prompt(self, question: str,
                          sources: list[MinimalSource]) -> list[dict[str, str]]
@@ -64,11 +74,82 @@ class AnswerGeneration():
 
         return answer
 
-    def answer_dataset(self) -> None:
+    def answer_dataset(self,
+                       dataset: StudentSearchResults) -> list[MinimalAnswer]:
         """
-        .
+        Generate an answer for a dataset.
+
+        Parameter:
+          - dataset: StudentSearchResult
+
+        Return
+        -> list[MinimalAnswer]
         """
-        pass
+        answers_list: list[MinimalAnswer] = []
+
+        for query in tqdm(dataset.search_results, unit=" query",
+                          desc="Answering"):
+            answer = self.answer(query.question, query.retrieved_sources,
+                                 query.question_id)
+
+            answers_list.append(answer)
+
+        print(f"\n{g}[INFO]{end}: Processed {len(answers_list)} of "
+              f"{len(dataset.search_results)} questions")
+
+        return answers_list
+
+    def create_dataset(self, file_path: str) -> StudentSearchResults | None:
+        """
+        Check the validity of the question list.
+
+        Parameter:
+            - file_path: str
+
+        Return
+        -> StudentSearchResults | None
+        """
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                # Validate the model
+                data = json.load(f)
+                dataset = StudentSearchResults.model_validate(data)
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
+
+        print(f"\n{g}[INFO]{end}: Loaded {len(dataset.search_results)} "
+              "questions...")
+
+        return dataset
+
+    def save_dataset(self, search_results: StudentSearchResults,
+                     answers: list[MinimalAnswer], file_path: str) -> None:
+        """
+        Save the dataset in the wanted folder.
+
+        Parameters:
+          - search_results: StudentSearchResults
+          - answers: list[MinimalAnswer]
+          - file_path: str
+        """
+        final_output = StudentSearchResultsAndAnswer(search_results=answers,
+                                                     k=search_results.k)
+
+        # Write the model in a JSON file
+        try:
+            with open(file_path, "w", encoding='utf-8') as f:
+                f.write(final_output.model_dump_json(indent=4))
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
+
+        print(f"\n{g}[INFO]{end}: Saved student_search_results_and_answer "
+              f"to {file_path}")
 
     # --------------- #
     # Private Methods #
