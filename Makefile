@@ -106,10 +106,10 @@ answer_dataset: index
 				$(PYTHON) -m src answer_dataset --student_search_results_path ${STUDENT_SEARCH_RESULTS_PATH} --save_directory data/output/search_results_and_answer/UnansweredQuestions
 
 
-evaluate: index
-		  @clear
-		  @echo "$(BLUE)Evaluating the recall@k...$(END)"
-		  $(PYTHON) -m src evaluate --student_search_results_path ${STUDENT_SEARCH_RESULTS_PATH} --dataset_path data/datasets/AnsweredQuestions/dataset_docs_public.json
+evaluate: 
+	@clear
+	@echo "$(BLUE)Evaluating the recall@k...$(END)"
+	$(PYTHON) -m src evaluate --student_search_results_path ${STUDENT_SEARCH_RESULTS_PATH} --dataset_path data/datasets/AnsweredQuestions/dataset_docs_public.json
 
 # ----------------- #
 #       Colors      #

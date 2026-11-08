@@ -144,6 +144,6 @@ class Chunker():
             chunk_list.append(MinimalSource(file_path=file_path,
                                             first_character_index=first_i,
                                             last_character_index=last_i,
-                                            content=content))
+                                            content=chunk))
 
         return chunk_list

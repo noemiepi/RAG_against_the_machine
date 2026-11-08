@@ -55,10 +55,10 @@ class RAGEngine():
         if os.path.exists("data/processed") is False:
             os.mkdir("data/processed")
 
-            if os.path.exists("data/processed/bm25") is False:
-                os.mkdir("data/processed/bm25")
+        if os.path.exists("data/processed/bm25") is False:
+            os.mkdir("data/processed/bm25")
 
-            print("Every missing folder has been created successfully!")
+        print("Every missing folder has been created successfully!")
 
         # Index the corpus
         nb_chunks: int = indexing(max_chunk_size, vLLM_path)

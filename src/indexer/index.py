@@ -35,11 +35,11 @@ def indexing(max_chunk_size: int, vLLM_path: str) -> int:
     for file, content in tqdm(file_dict.items(), unit=" file",
                               desc="Chunking"):
         list_info = chunking.create_chunks(file, content)
-        text_list.append(content)
 
         if list_info:
             for metadata in list_info:
                 metadata_list.append(metadata.model_dump())
+                text_list.append(metadata.content)
 
     nb_chunk: int = create_source_info(metadata_list)
 
