@@ -48,7 +48,7 @@ class RetrieverEngine():
         retrieved_sources: list[MinimalSource] = []
 
         # Tokenize the query
-        query_token = bm25s.tokenize(query, stemmer=self.stemmer, 
+        query_token = bm25s.tokenize(query, stemmer=self.stemmer,
                                      stopwords="en")
 
         # Get top-k results as a tuple doc-ids/scores

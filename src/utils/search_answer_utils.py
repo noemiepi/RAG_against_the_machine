@@ -36,7 +36,8 @@ def write_search_results(query: str, retrieved_sources: list[MinimalSource],
         raise ValueError(e)
 
 
-def write_answer_results(query: str, retrieved_sources: list[MinimalSource],
+def write_answer_results(query: str,
+                         retrieved_sources: list[MinimalSource] | None,
                          answer: MinimalAnswer, k: int) -> None:
     """
     It writes the query, its id, top-k retrieved sources,
@@ -45,10 +46,13 @@ def write_answer_results(query: str, retrieved_sources: list[MinimalSource],
 
     Parameters:
       - query: str
-      - retrieved_sources: list[MinimalSource]
+      - retrieved_sources: list[MinimalSource] | None
       - answer: str
       - k: int
     """
+    if retrieved_sources is None:
+        raise ValueError("No retrieved sources provided")
+
     file_path: str = "data/output/answer_operations.json"
 
     min_answer = [MinimalAnswer(question_id=str(uuid.uuid4()),

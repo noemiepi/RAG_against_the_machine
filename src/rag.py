@@ -186,6 +186,9 @@ class RAGEngine():
         # Reunite necessary resources
         search_result = self.search(query, k, False)
 
+        if search_result is None:
+            raise ValueError("No search results found")
+
         # Create the generator
         generator = AnswerGeneration()
         answer = generator.answer(query, search_result, None)

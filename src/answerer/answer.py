@@ -20,7 +20,8 @@ class AnswerGeneration():
     queries using an AI model.
 
     Attributes:
-      - answer(self, query: str, retrived_sources: list[MinimalSource],
+      - answer(self, query: str,
+               retrived_sources: list[MinimalSource] | None,
                question_id: uuid.UUID | None) -> MinimalAnswer
       - answer_dataset(self,
                        dataset: StudentSearchResults) -> list[MinimalAnswer]
@@ -42,19 +43,23 @@ class AnswerGeneration():
 
         self._load_llm()
 
-    def answer(self, question: str, retrived_sources: list[MinimalSource],
+    def answer(self, question: str,
+               retrived_sources: list[MinimalSource] | None,
                question_id: uuid.UUID | None) -> MinimalAnswer:
         """
         Generates an answer to a query.
 
         Parameters:
           - question: str
-          - retrieved_sources: list[MinimalSource]
+          - retrieved_sources: list[MinimalSource] | None
           - question_id: uuid.UUID | None
 
         Return
         -> MinimalAnswer
         """
+        if retrived_sources is None:
+            raise ValueError("No retrieved sources provided")
+
         prompt: list[dict[str, str]] = self._generate_prompt(question,
                                                              retrived_sources)
         gen_answer: str = self._generate_answer(prompt)
