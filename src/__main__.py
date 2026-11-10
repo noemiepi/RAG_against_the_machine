@@ -26,5 +26,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{g}[INFO]{end}: Quitting RAG!")
 
-    # except Exception as e:
-    #     print(f"{r}[ERROR]{end}: An unexpected error occured:\n-> {e}")
+    except Exception as e:
+        print(f"{r}[ERROR]{end}: An unexpected error occured:\n-> {e}")
