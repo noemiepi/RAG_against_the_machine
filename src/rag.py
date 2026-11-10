@@ -1,11 +1,12 @@
 import os
+import json
 
-from src.indexer.index import indexing
-from src.retriever.retrieval import RetrieverEngine
-from src.answerer.answer import AnswerGeneration
-from src.models.models import MinimalSource
-from src.utils.search_answer_utils import (write_search_results,
-                                           write_answer_results)
+from src.indexer import indexing
+from src.retriever import RetrieverEngine
+from src.answerer import AnswerGeneration
+from src.models import MinimalSource, StudentSearchResults
+from src.evaluate import Recall
+from src.utils import write_search_results, write_answer_results
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -143,14 +144,7 @@ class RAGEngine():
 
         if os.path.exists(save_directory) is False:
             # Check the file_path and create mising folder
-            folder_path: str = ""
-            for folder in folders:
-                folder_path += folder
-
-                if os.path.exists(folder_path) is False:
-                    os.mkdir(folder_path)
-
-                folder_path += "/"
+            os.makedirs(save_directory)
 
         # Check that a file to stock the data exists
         if not folders[-1].endswith(".json"):
@@ -218,7 +212,8 @@ class RAGEngine():
         """
         # Check if the paths exists
         if os.path.exists(student_search_results_path) is False:
-            raise ValueError("Path to the student search results do not exist")
+            raise ValueError("Path to the student search results "
+                             "does not exist")
 
         folders = save_directory.split("/")
 
@@ -251,8 +246,8 @@ class RAGEngine():
     def evaluate(self, student_search_results_path: str,
                  dataset_path: str) -> None:
         """
-        Report your own recall@k against a ground-truth
-        dataset, for your own testing.
+        Report own recall@k against a ground-truth dataset,
+        for own testing.
 
         Parameters:
           - student_search_results_path: str
@@ -260,7 +255,35 @@ class RAGEngine():
         """
         # Check if the paths exists
         if os.path.exists(student_search_results_path) is False:
-            raise ValueError("Path to the student search results do not exist")
+            raise ValueError("Path to the student search results "
+                             "does not exist")
 
         if os.path.exists(dataset_path) is False:
             raise ValueError("Path to the dataset does not exist")
+
+        recall = Recall()
+
+        try:
+            # Extract data from both path
+            with open(dataset_path, "r", encoding="utf8") as f:
+                dataset = json.load(f)
+
+            with open(student_search_results_path, "r", encoding="utf8") as f:
+                search_result = StudentSearchResults(**json.loads(f.read()))
+
+        except PermissionError:
+            raise ValueError(f"Permission error with this file: {f}")
+        except Exception as e:
+            raise ValueError(e)
+
+        dataset_dict = {
+            str(q["question_id"]): q["sources"]
+            for q in dataset["rag_questions"]
+        }
+
+        result = recall.recall_k(search_result, dataset_dict)
+
+        print("🎯 Evaluation Results")
+        print("========================================")
+        print(f"📊 Questions evaluated: {len(dataset_dict)}")
+        print(f"📈 Recall@5: {(result / 100):.3f} ({result:.1f}%)")

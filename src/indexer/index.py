@@ -5,7 +5,7 @@ import Stemmer
 from tqdm import tqdm
 from typing import Any
 
-from src.indexer.chunker import Chunker
+from src.indexer import Chunker
 from src.utils.file_utils import load_files
 
 

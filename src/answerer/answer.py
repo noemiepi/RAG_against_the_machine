@@ -4,8 +4,8 @@ import json
 from tqdm import tqdm
 from transformers import pipeline
 
-from src.models.models import (StudentSearchResultsAndAnswer, MinimalAnswer,
-                               StudentSearchResults, MinimalSource)
+from src.models import (StudentSearchResultsAndAnswer, MinimalAnswer,
+                        StudentSearchResults, MinimalSource)
 
 MAX_NEW_TOKENS: int = 256
 

@@ -1,7 +1,7 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 
 from src.utils.file_utils import check_file_extension
-from src.models.models import MinimalSource
+from src.models import MinimalSource
 
 CHUNK_OVERLAP_MULT = 0.15
 EXTENSIONS = [".py", ".md", ".txt"]

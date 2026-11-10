@@ -115,10 +115,9 @@ flowchart LR
 ```
 
 In my implementation, the process is divided into classes:
-- **Chunker**: This class will chunk a given corpus of texts as long as they are either `.py`, `.md` or `.txt` files. It splits the source files to create chunks and preserves the context.
+- **Chunker**: This class will chunk a given corpus of texts as long as they are either `.py`, `.md` or `.txt` files. It splits the source files to create chunks and preserves the context. This class is then used to create the index containing the chunks and its informations.
 - **RetrieverEngine**: This class will retrieve sources using the chunked corpus. It will group together the top-k chunks to answer queries.
 - **AnswerGeneration**: This class will generate an answer to a query or a series of queries using an AI model. It uses the previously retrieved sources in the prompt used to answer a query.
-- **Recall**: Evaluate the text retrieval and its relevance by comparing it to a series of questions that already have a top-k sources.
 
 And everything is controlled by **RAGEngine**, which goes through the necessary classes to answer a given command.
 
@@ -219,3 +218,5 @@ By giving the correct part of the file, the problem was resolved.
 
 ### GitHub
 - [Overtekk](https://github.com/Overtekk/RAG-against-the-machine)
+
+- [buchy16](https://github.com/buchy16/RAG-against-the-machine-)

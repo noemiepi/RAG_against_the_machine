@@ -1,8 +1,7 @@
 import uuid
 
-from src.models.models import (MinimalSource, MinimalAnswer,
-                               MinimalSearchResults, StudentSearchResults,
-                               StudentSearchResultsAndAnswer)
+from src.models import (MinimalSource, MinimalAnswer, MinimalSearchResults,
+                        StudentSearchResults, StudentSearchResultsAndAnswer)
 
 
 def write_search_results(query: str, retrieved_sources: list[MinimalSource],

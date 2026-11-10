@@ -2,9 +2,9 @@ import json
 import bm25s
 import Stemmer
 
-from src.models.models import (MinimalSource, MinimalSearchResults,
-                               StudentSearchResults, RagDataset,
-                               AnsweredQuestion, UnansweredQuestion)
+from src.models import (MinimalSource, MinimalSearchResults, RagDataset,
+                        StudentSearchResults, AnsweredQuestion,
+                        UnansweredQuestion)
 
 
 end = "\033[0m"
