@@ -7,7 +7,7 @@ from src.retriever import RetrieverEngine
 from src.answerer import AnswerGeneration
 from src.models import MinimalSource, StudentSearchResults
 from src.evaluate import Recall
-from src.utils import write_search_results, write_answer_results
+from src.utils import write_search_results, write_answer_results, RAGConfig
 
 MAX_CONTEXT_LENGTH = 2000
 EXTENSIONS = [".py", ".md", ".txt"]
@@ -22,38 +22,48 @@ class RAGEngine():
     their flags are defined here.
 
     Attributes:
-      - index(self, max_chunk_size: int) -> None
-      - search(self, query: str, k: int,
+      - index(self, max_chunk_size: int = RAGConfig.MAX_CHUNK) -> None
+      - search(self, query: str = RAGConfig.QUERY, k: int = 10,
                verbose: bool = True) -> list[MinimalSource] | None
-      - search_dataset(self, dataset_path: str, k: int,
-                       save_directory: str) -> None
-      - answer(self, query: str, k: int) -> None
-      - answer_dataset(self, student_search_results_path: str,
-                       save_directory: str) -> None
-      - evaluate(self, student_search_results_path: str,
-                 dataset_path: str) -> None
+      - search_dataset(self,
+                       dataset_path: str = RAGConfig.DATASET_UNANSWERED_PATH,
+                       k: int = 10,
+                       save_directory: str = RAGConfig.SAVE_PATH) -> None
+      - answer(self, query: str = RAGConfig.QUERY, k: int = 10) -> None
+      - answer_dataset(
+            self, student_search_results_path: str = RAGConfig.RESULTS_PATH,
+            save_directory: str = RAGConfig.SEARCH_SAVE_PATH
+            ) -> None
+      - evaluate(self,
+                 student_search_results_path: str = RAGConfig.RESULTS_PATH,
+                 dataset_path: str = RAGConfig.DATASET_ANSWERED_PATH) -> None
     """
-    def index(self, max_chunk_size: int) -> None:
+    def index(self, max_chunk_size: int = RAGConfig.MAX_CHUNK) -> None:
         """
         Ingest data/raw/ and build the index under data/processed/.
 
         Parameter:
-          - max_chunk_size: int
+          - max_chunk_size: int = RAGConfig.MAX_CHUNK
         """
         # Check the max_chunk_size
         if max_chunk_size <= 0:
             raise ValueError("The context length should not be "
                              "below 0 character.")
-        if max_chunk_size > 2000:
+        if max_chunk_size > RAGConfig.MAX_CHUNK:
             raise ValueError("The context length should not be "
                              "above 2000 characters.")
 
-        # Check if the required folder is present
+        # Check if the required LLM folder is present
         vLLM_path: str = "data/raw/vllm-0.10.1/"
         if os.path.exists("data/raw") is False:
             os.mkdir("data/raw")
+
+        try:
             with zipfile.ZipFile("vllm-0.10.1.zip", 'r') as zip_file:
                 zip_file.extractall("data/raw")
+
+        except Exception:
+            print("No corresponding .zip file found")
 
         if os.path.exists(vLLM_path) is False:
             raise ValueError("Path to vllm does not exist. "
@@ -76,18 +86,18 @@ class RAGEngine():
         print(f"Ingestion complete! Indexed {nb_chunks} chunks "
               "under data/processed/")
 
-    def search(self, query: str, k: int,
+    def search(self, query: str = RAGConfig.QUERY, k: int = 10,
                verbose: bool = True) -> list[MinimalSource] | None:
         """
         Return the top-k sources for a single query.
 
         Parameters:
-          - query: str
-          - k: int
-          - verbose: bool
+          - query: str = RAGConfig.QUERY
+          - k: int = 10
+          - verbose: bool = True
 
         Return
-        -> list[MinimalSource]
+        -> list[MinimalSource] | None
         """
         chunk_list: list[MinimalSource] = []
 
@@ -97,6 +107,9 @@ class RAGEngine():
         if k <= 0:
             raise ValueError("Invalid k. The value cannot be below "
                              "or equal to 0")
+        if k >= RAGConfig.MAX_K:
+            raise ValueError("Invalid k. The value cannot be "
+                             f"higher than {RAGConfig.MAX_K}")
 
         # Check if the indexing was previously done
         if os.path.exists("data/processed") is False:
@@ -129,23 +142,34 @@ class RAGEngine():
 
         return chunk_list
 
-    def search_dataset(self, dataset_path: str, k: int,
-                       save_directory: str) -> None:
+    def search_dataset(self,
+                       dataset_path: str = RAGConfig.DATASET_UNANSWERED_PATH,
+                       k: int = 10,
+                       save_directory: str = RAGConfig.SAVE_PATH) -> None:
         """
         Run search over a whole dataset and write a
         StudentSearchResults JSON file.
 
         Parameters:
-          - dataset_path: str
-          - k: int,
-          - save_directory: str
+          - dataset_path: str = RAGConfig.DATASET_UNANSWERED_PATH
+          - k: int = 10
+          - save_directory: str = RAGConfig.SAVE_PATH
         """
         # Check the given parameters
         if k <= 0:
             raise ValueError("Invalid k. The value cannot be below "
                              "or equal to 0")
+        if k >= RAGConfig.MAX_K:
+            raise ValueError("Invalid k. The value cannot be "
+                             f"higher than {RAGConfig.MAX_K}")
         if os.path.exists(dataset_path) is False:
             raise ValueError("Path to the dataset does not exist")
+
+        # Check if the indexing was previously done
+        if os.path.exists("data/processed") is False:
+            raise ValueError("Indexing is not made. "
+                             "Please type the command "
+                             "'make index' and retry")
 
         # Check if the path exists
         folders = save_directory.split("/")
@@ -170,13 +194,13 @@ class RAGEngine():
             chunk_list = retriever.retrieve_dataset(dataset)
             retriever.save_dataset(chunk_list, save_directory, k)
 
-    def answer(self, query: str, k: int) -> None:
+    def answer(self, query: str = RAGConfig.QUERY, k: int = 10) -> None:
         """
         Answer a single query using the retrieved context.
 
         Parameters:
-          - query: str
-          - k: int
+          - query: str = RAGConfig.QUERY
+          - k: int = 10
         """
         # Check the given parameters
         if query == "":
@@ -184,6 +208,9 @@ class RAGEngine():
         if k <= 0:
             raise ValueError("Invalid k. The value cannot be below "
                              "or equal to 0")
+        if k >= RAGConfig.MAX_K:
+            raise ValueError("Invalid k. The value cannot be "
+                             f"higher than {RAGConfig.MAX_K}")
 
         # Reunite necessary resources
         search_result = self.search(query, k, False)
@@ -208,15 +235,17 @@ class RAGEngine():
         print(f"\n{g}[INFO]{end}: Saved answer results to "
               "data/output/answer_operations.json")
 
-    def answer_dataset(self, student_search_results_path: str,
-                       save_directory: str) -> None:
+    def answer_dataset(
+            self, student_search_results_path: str = RAGConfig.RESULTS_PATH,
+            save_directory: str = RAGConfig.SEARCH_SAVE_PATH
+            ) -> None:
         """
         Generate answers for a dataset, producing a
         StudentSearchResultsAndAnswer JSON file.
 
         Parameters:
-          - student_search_results_path: str
-          - save_directory: str
+          - student_search_results_path: str = RAGConfig.RESULTS_PATH
+          - save_directory: str = RAGConfig.SEARCH_SAVE_PATH
         """
         # Check if the paths exists
         if os.path.exists(student_search_results_path) is False:
@@ -251,15 +280,16 @@ class RAGEngine():
             answers = generator.answer_dataset(dataset)
             generator.save_dataset(dataset, answers, save_directory)
 
-    def evaluate(self, student_search_results_path: str,
-                 dataset_path: str) -> None:
+    def evaluate(self,
+                 student_search_results_path: str = RAGConfig.RESULTS_PATH,
+                 dataset_path: str = RAGConfig.DATASET_ANSWERED_PATH) -> None:
         """
         Report own recall@k against a ground-truth dataset,
         for own testing.
 
         Parameters:
-          - student_search_results_path: str
-          - dataset_path: str
+          - student_search_results_path: str = RAGConfig.RESULTS_PATH
+          - dataset_path: str = RAGConfig.DATASET_ANSWERED_PATH
         """
         # Check if the paths exists
         if os.path.exists(student_search_results_path) is False:

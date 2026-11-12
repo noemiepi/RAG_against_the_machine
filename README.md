@@ -127,7 +127,8 @@ During the chunking, the file format needs to be considered. A code won't be sep
 
 - **Documentation(.md and .txt)**: It also uses `RecursiveCharacterTextSplitter.from_language()` function for `Markdown` and simply `RecursiveCharacterTextSplitter()` for simple text. It's aware of the separations of text, like titles.
 
-On top of this, an overlap of 15% of the chunk size was chosen to keep enough context from the previous chunk and the next one.
+On top of this, an overlap of 15% of the chunk size was chosen to keep enough context from the previous chunk.</br>
+The Chunk size can also affect the quality of the chunking. For instance, is a chunk size is too small, the chunk lose context. On the other hand, if its too large, the embedding is diluted and cannot be correctly linked to another chunk.
 
 ## Retrieval Method
 The retrieval is based on BM25 and uses the `bm25s` dependency:
