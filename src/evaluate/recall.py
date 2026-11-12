@@ -18,7 +18,7 @@ class Recall():
                      source_b: MinimalSource) -> float
     """
     def recall_k(self, search_results: StudentSearchResults,
-                 dataset: dict[str, Any]) -> float:
+                 dataset: dict[str, Any]) -> dict[str, float]:
         """
         Compute recall@k scores for the provided search results.
 
@@ -27,10 +27,9 @@ class Recall():
           - dataset: dict[str, Any]
 
         Return:
-        -> float
+        -> dict[str, float]
         """
         recalls = {"1": 0.0, "3": 0.0, "5": 0.0, "10": 0.0}
-        score_list: list[float] = []
 
         for k in recalls.keys():
             if (int(k) <= search_results.k):
@@ -43,14 +42,10 @@ class Recall():
                         validated += self._valid_question(search_result,
                                                           src, int(k))
 
-                question_score: float = (validated / len(dataset)
-                                         if len(dataset) > 0 else 0)
-                score_list.append(question_score)
+                recalls[k] = (validated / len(dataset)
+                              if len(dataset) > 0 else 0)
 
-        total_recall: float = ((sum(score_list) / len(score_list) * 100)
-                               if len(score_list) >0 else 0)
-
-        return total_recall
+        return recalls
 
     # --------------- #
     # Private Methods #
@@ -89,23 +84,23 @@ class Recall():
         -> float
         """
         # Extract the sources
-        inter_start = max(source_a.first_character_index,
-                          source_b['first_character_index'])
-        inter_end = min(source_a.last_character_index,
-                        source_b['last_character_index'])
+        inter_start: int = max(source_a.first_character_index,
+                               source_b['first_character_index'])
+        inter_end: int = min(source_a.last_character_index,
+                             source_b['last_character_index'])
 
         # Compute intersection
-        inter = max(0, inter_end - inter_start)
+        inter: int = max(0, inter_end - inter_start)
 
         # Compute both boxes (intersection and union)
-        len_a = max(
+        len_a: int = max(
             0, source_a.last_character_index - source_a.first_character_index
             )
-        len_b = max(0, (source_b['last_character_index'] -
-                        source_b['last_character_index']))
+        len_b: int = max(0, (source_b['last_character_index'] -
+                             source_b['first_character_index']))
 
         # Compute union
-        union = len_a + len_b - inter
+        union: int = len_a + len_b - inter
 
         # Compute IoU
         if union <= 0:

@@ -1,5 +1,6 @@
 import os
 import json
+import zipfile
 
 from src.indexer import indexing
 from src.retriever import RetrieverEngine
@@ -49,8 +50,15 @@ class RAGEngine():
 
         # Check if the required folder is present
         vLLM_path: str = "data/raw/vllm-0.10.1/"
+        if os.path.exists("data/raw") is False:
+            os.mkdir("data/raw")
+            with zipfile.ZipFile("vllm-0.10.1.zip", 'r') as zip_file:
+                zip_file.extractall("data/raw")
+
         if os.path.exists(vLLM_path) is False:
-            raise ValueError("Path to vllm does not exist")
+            raise ValueError("Path to vllm does not exist. "
+                             "Place the .zip file at the root "
+                             "of the project and run again.")
 
         # If the folders don't exist, it is created
         if os.path.exists("data/processed") is False:
@@ -283,7 +291,9 @@ class RAGEngine():
 
         result = recall.recall_k(search_result, dataset_dict)
 
+        # Print the results
         print("🎯 Evaluation Results")
         print("========================================")
         print(f"📊 Questions evaluated: {len(dataset_dict)}")
-        print(f"📈 Recall@5: {(result / 100):.3f} ({result:.1f}%)")
+        for recallk, score in result.items():
+            print(f"📈 Recall@{recallk}: {score:.3f} ({(score * 100):.1f}%)")

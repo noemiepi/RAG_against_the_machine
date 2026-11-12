@@ -15,6 +15,7 @@ uv.lock
 # ------------------- #
 #        Other        #
 # ------------------- #
-moulinette/
+moulinette
 output/
 vllm-0.10.1/
+processed/
