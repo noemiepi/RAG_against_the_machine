@@ -1,7 +1,7 @@
 <div align="center">
-    <i>This project has been created as part of the 42 curriculum by npillet</i>
     <h1>RAG against the machine</h1>
     <h3>Will you answer my questions?</h3>
+    <i>This project has been created as part of the 42 curriculum by npillet</i>
 </div>
 
 ## Table of contents
@@ -221,3 +221,11 @@ By giving the correct part of the file, the problem was resolved.
 - [Overtekk](https://github.com/Overtekk/RAG-against-the-machine)
 
 - [buchy16](https://github.com/buchy16/RAG-against-the-machine-)
+
+<br>
+<hr>
+<br>
+
+<div align="center">
+    <img src="assets/footer.png" />
+</div>
