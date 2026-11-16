@@ -171,20 +171,17 @@ class RAGEngine():
                              "Please type the command "
                              "'make index' and retry")
 
-        # Check if the path exists
-        folders = save_directory.split("/")
+        # Resolve output file and directory
+        if save_directory.endswith(".json"):
+            output_file = save_directory
+            output_dir = os.path.dirname(save_directory)
+        else:
+            output_dir = save_directory
+            output_file = os.path.join(save_directory, 
+                                       os.path.basename(dataset_path))
 
-        if os.path.exists(save_directory) is False:
-            # Check the file_path and create mising folder
-            os.makedirs(save_directory)
-
-        # Check that a file to stock the data exists
-        if not folders[-1].endswith(".json"):
-            file_name: str = "dataset_docs_public.json"
-            if save_directory.endswith("/"):
-                save_directory += file_name
-            else:
-                save_directory += f"/{file_name}"
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
 
         # Retrieve the top-k sources
         retriever = RetrieverEngine(k)
@@ -192,7 +189,7 @@ class RAGEngine():
         dataset = retriever.create_dataset(dataset_path)
         if dataset:
             chunk_list = retriever.retrieve_dataset(dataset)
-            retriever.save_dataset(chunk_list, save_directory, k)
+            retriever.save_dataset(chunk_list, output_file, k)
 
     def answer(self, query: str = RAGConfig.QUERY, k: int = 10) -> None:
         """
@@ -252,33 +249,26 @@ class RAGEngine():
             raise ValueError("Path to the student search results "
                              "does not exist")
 
-        folders = save_directory.split("/")
+        # Resolve output file and directory
+        if save_directory.endswith(".json"):
+            output_file = save_directory
+            output_dir = os.path.dirname(save_directory)
+        else:
+            output_dir = save_directory
+            output_file = os.path.join(save_directory,
+                                       os.path.basename(
+                                           student_search_results_path
+                                           ))
 
-        if os.path.exists(save_directory) is False:
-            # Check the file_path and create mising folder
-            folder_path: str = ""
-            for folder in folders:
-                folder_path += folder
-
-                if os.path.exists(folder_path) is False:
-                    os.mkdir(folder_path)
-
-                folder_path += "/"
-
-        # Check that a file to stock the data exists
-        if not folders[-1].endswith(".json"):
-            file_name: str = "dataset_docs_public.json"
-            if save_directory.endswith("/"):
-                save_directory += file_name
-            else:
-                save_directory += f"/{file_name}"
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
 
         generator = AnswerGeneration()
 
         dataset = generator.create_dataset(student_search_results_path)
         if dataset:
             answers = generator.answer_dataset(dataset)
-            generator.save_dataset(dataset, answers, save_directory)
+            generator.save_dataset(dataset, answers, output_file)
 
     def evaluate(self,
                  student_search_results_path: str = RAGConfig.RESULTS_PATH,
