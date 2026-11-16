@@ -128,7 +128,8 @@ During the chunking, the file format needs to be considered. A code won't be sep
 - **Documentation(.md and .txt)**: It also uses `RecursiveCharacterTextSplitter.from_language()` function for `Markdown` and simply `RecursiveCharacterTextSplitter()` for simple text. It's aware of the separations of text, like titles.
 
 On top of this, an overlap of 15% of the chunk size was chosen to keep enough context from the previous chunk.</br>
-The Chunk size can also affect the quality of the chunking. For instance, is a chunk size is too small, the chunk lose context. On the other hand, if its too large, the embedding is diluted and cannot be correctly linked to another chunk.
+
+The chunk size can also affect the quality of the chunking. For instance, if a chunk size is too small, the chunk lose context. On the other hand, if its too large, the embedding is diluted and cannot be correctly linked to another chunk.
 
 ## Retrieval Method
 The retrieval is based on BM25 and uses the `bm25s` dependency:
@@ -141,7 +142,8 @@ There are a few expected performances, such as:
 - **Retrieval throughput**: at most 90 seconds for 200 questions
 - **Recall@5**: at least 80% on docs questions and 50% on code questions
 
-For the indexing time and the retrieval throughput, the program manages to do each in just a few seconds.
+For the indexing time, the program manages to do it in 6 seconds.
+As for the retrieval throughput, it is completed in 4 seconds for the docs and 3 seconds for the code.</br>
 
 For the recall@5, below are the results:</br>
 - This is the document recall@k:
