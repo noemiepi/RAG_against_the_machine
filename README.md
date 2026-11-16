@@ -4,7 +4,7 @@
     <i>This project has been created as part of the 42 curriculum by npillet</i>
 </div>
 
-## Table of contents
+## Table of Contents
 - [Description](#description)
 - [Instructions](#instructions)
     - [Example Usage](#example-usage)
